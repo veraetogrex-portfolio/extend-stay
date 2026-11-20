@@ -1,0 +1,149 @@
+/* Extend Stay — github.com/veraetogrex-portfolio · zero dependencies
+   A hotel stay as a band of nights over one month: dark-blue nights with a moon and a price,
+   nights added to the booking in a lighter blue, a booking bar that counts the same nights. */
+:root {
+  --page: #07080c; --panel: #0e1016; --bar: #131722;
+  --text: #f2f3f7; --text-2: #b4b9c6; --text-3: #8c93a3; --past: #5a6170;
+  --line: rgba(255, 255, 255, .08);
+  /* a night: the dark blue of a hotel window after dusk, with its moon */
+  --night: #1d3170; --night-add: #3b5fd6; --moon: #e9eeff; --on-night-2: rgba(233, 238, 255, .78);
+  --harbor: #4d7cf2;           /* restrained blue: check-in, check-out ring, handle grip, the CTA */
+  --harbor-ink: #a9c1ff;       /* a night added to the booking */
+  --taken: #141821;            /* a night someone else holds */
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --display: var(--font);
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; overflow: hidden; background: var(--page); color: var(--text); font: 16px/1.4 var(--font); }
+p, h2 { margin: 0; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+button:focus-visible { outline: 3px solid var(--harbor-ink); outline-offset: 3px; }
+
+.st { position: relative; width: 1360px; height: 840px; border-radius: 36px; overflow: hidden; user-select: none; -webkit-user-select: none;
+  background: var(--panel); box-shadow: 0 0 0 1px var(--line) inset, 0 1px 0 rgba(255, 255, 255, .06) inset, 0 80px 140px -50px rgba(0, 0, 0, .8); }
+@media (max-width: 1400px) { .st { zoom: .8; } }
+@media (max-width: 1100px) { .st { zoom: .6; } }
+@media (max-width: 820px)  { .st { zoom: .4; } }
+@media (max-width: 560px)  { .st { zoom: .27; } }
+
+.st-top { position: absolute; left: 64px; right: 64px; top: 32px; display: flex; align-items: baseline; justify-content: space-between; }
+.st-month { font: 700 44px/1.1 var(--display); letter-spacing: -.02em; }
+.st-brand { display: flex; align-items: baseline; gap: 12px; }
+.st-brand b { font: 800 24px var(--font); letter-spacing: .04em; }
+.st-brand span { font: 600 24px var(--font); color: var(--text-3); }
+.st-brand .st-place { margin-left: 18px; color: var(--text-2); }
+
+/* ── the month: the whole width; past weeks fold to one line ── */
+.st-cal { position: absolute; left: 64px; top: 100px; width: 1232px; }
+.st-wd { display: grid; grid-template-columns: repeat(7, 176px); }
+.st-wd span { padding-left: 22px; font: 600 22px var(--font); color: var(--text-3); }
+.st-grid { position: relative; margin-top: 8px; width: 1232px; height: 560px; }
+
+/* a band per week row, clipped to the nights that fall in that row */
+.st-band { position: absolute; left: 0; width: 1232px; height: 176px; background: var(--night); clip-path: inset(0 100% 0 0); pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(169, 193, 255, .14) inset; }
+.st-band.is-add { background: var(--night-add); box-shadow: 0 0 0 2px rgba(233, 238, 255, .55) inset; }   /* nights the booking did not have yet */
+
+/* check-in disc and check-out ring sit behind the day number */
+.st-mark { position: absolute; left: 0; top: 0; width: 176px; height: 168px; pointer-events: none; transition: transform .38s cubic-bezier(.23, 1, .32, 1), opacity .2s; }
+.st.is-dragging .st-mark.is-out { opacity: 0; }   /* the ring steps aside while the edge moves; the tag speaks for it */
+.st-mark i { position: absolute; left: 12px; top: 14px; width: 72px; height: 72px; border-radius: 50%; }
+.st-mark.is-in i { background: var(--harbor); }
+.st-mark.is-tall i { top: 18px; width: 80px; height: 80px; }
+.st-mark.is-out i { box-shadow: 0 0 0 3px var(--harbor) inset; }
+.st-mark.is-out b { position: absolute; left: 14px; bottom: 26px; font: 700 33px var(--font); letter-spacing: -.01em; color: var(--harbor-ink); white-space: nowrap; }
+
+.st-day { position: absolute; left: 0; top: 0; width: 176px; height: 168px; border-radius: 28px; transition: translate .35s cubic-bezier(.2, .8, .2, 1); }
+.st-day.is-pop { translate: 0 -14px; z-index: 3; }   /* straight up: the neighbours stay uncovered */
+.st-num { position: absolute; left: 12px; top: 14px; width: 72px; height: 72px; display: grid; place-items: center; font: 600 44px var(--font); font-variant-numeric: tabular-nums; }
+.st-day.is-past { cursor: default; }
+.st-day.is-past .st-num { color: var(--past); }
+.st-day.is-folded { display: none; }
+.st-day.is-today .st-num::after { content: ""; position: absolute; left: 50%; bottom: 2px; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: var(--harbor); }
+.st-day.is-taken { cursor: not-allowed; }
+.st-day.is-taken::before { content: ""; position: absolute; inset: 4px; border-radius: 24px; background: var(--taken); }
+.st-day.is-taken .st-num { color: var(--text-3); text-decoration: line-through 3px; }
+.st-taken { position: absolute; left: 22px; bottom: 28px; font: 600 28px var(--font); color: var(--text-3); }
+.st-day:not(.is-past):not(.is-taken):not(.is-night):hover::before { content: ""; position: absolute; inset: 4px; border-radius: 24px; box-shadow: 0 0 0 2px rgba(169, 193, 255, .35) inset; }
+
+/* a night: its moon comes up and its price is printed when the band covers the day */
+.st-moon { position: absolute; right: 18px; top: 18px; width: 66px; height: 66px; color: var(--moon); opacity: 0; transform: translateY(64px) rotate(-40deg) scale(.5);
+  transition: transform .25s ease-in, opacity .12s; }   /* a night that leaves goes quickly */
+.st-moon svg { width: 100%; height: 100%; fill: currentColor; }
+.st-price { position: absolute; left: 22px; bottom: 28px; font: 700 42px var(--font); letter-spacing: -.03em; font-variant-numeric: tabular-nums; color: var(--on-night-2); opacity: 0; transform: translateY(10px);
+  transition: transform .2s ease-in, opacity .12s, color .3s; }
+.st-day.is-night .st-moon { opacity: 1; transform: none; transition: transform .7s cubic-bezier(.16, 1, .3, 1), opacity .3s; }   /* moonrise: up from the price line */
+.st-day.is-night .st-price { opacity: 1; transform: none; transition: transform .35s cubic-bezier(.23, 1, .32, 1) .06s, opacity .2s .06s, color .3s; }
+.st-day.is-added .st-price { color: #fff; }
+.st-day.is-added .st-moon { color: #fff; }
+
+/* the right edge of the stay: grab it */
+.st-handle { position: absolute; left: 0; top: 0; width: 44px; height: 160px; cursor: ew-resize; touch-action: none; z-index: 5; }
+.st-handle i { position: absolute; left: 17px; top: calc(50% - 40px); width: 10px; height: 80px; border-radius: 5px; background: var(--moon);
+  box-shadow: 0 0 0 3px var(--night), 0 4px 10px rgba(0, 0, 0, .45); transition: transform .15s ease-out; pointer-events: none; }
+.st-handle:hover i { transform: scaleX(1.3) scaleY(1.08); }
+.st.is-dragging .st-handle i { transform: scaleX(1.5) scaleY(1.12); background: #fff; box-shadow: 0 0 0 3px var(--night), 0 0 0 8px rgba(169, 193, 255, .6); }   /* held: the grip widens and gets a ring */
+
+/* a night that just joined: a tile of the band lifts off and settles back */
+.st-lift { position: absolute; left: 0; top: 0; width: 170px; height: 160px; border-radius: 30px; background: var(--night-add); pointer-events: none; opacity: 0;
+  box-shadow: 0 0 0 2px rgba(233, 238, 255, .55) inset, 0 26px 34px -12px rgba(0, 0, 0, .8); transition: opacity .3s .1s, translate .35s cubic-bezier(.2, .8, .2, 1); }
+.st-lift.is-up { opacity: 1; translate: 0 -14px; transition: opacity .08s, translate .3s cubic-bezier(.2, .8, .2, 1); }
+/* the week of the stay: larger type */
+.st-day.is-tall .st-num { top: 18px; width: 80px; height: 80px; font-size: 52px; }
+.st-day.is-tall .st-moon { top: 26px; width: 62px; height: 62px; }
+.st-day.is-tall .st-price { left: 20px; bottom: 30px; font-size: 46px; }
+.st-day.is-tall.is-added .st-price { left: 14px; font-size: 50px; }   /* the price of the new night, large on its own tile */
+.st-day.is-tall.is-taken .st-taken { bottom: 32px; font-size: 30px; }
+.st-mark.is-out { z-index: 2; }   /* over the day, so a booked tile does not hide it */
+.st-day.is-taken.is-checkout .st-taken { opacity: 0; }   /* checking out the morning a booked night starts: the Checkout label takes the line */
+.st-day.is-taken.is-checkout .st-num { text-decoration: none; color: var(--text); }
+/* the new night's moon is bigger and takes longer to come up */
+.st-day.is-added .st-moon { top: 10px; right: 6px; width: 90px; height: 90px; }
+.st-day.is-added.is-night .st-moon { transition: transform 1s cubic-bezier(.16, 1, .3, 1), opacity .35s; }
+
+/* the tag on the band's end: what the stay is now */
+.st-tag { position: absolute; left: 0; top: 0; z-index: 6; display: flex; align-items: baseline; gap: 16px; height: 72px; padding: 0 22px; border-radius: 20px;
+  background: var(--moon); color: #12204d; white-space: nowrap; box-shadow: 0 10px 24px -8px rgba(0, 0, 0, .6); pointer-events: none; translate: -100% 0; }
+.st-tag::after { content: ""; position: absolute; right: var(--tip, 16px); bottom: -8px; width: 16px; height: 16px; background: var(--moon); transform: rotate(45deg); border-radius: 3px; }
+.st-tag.is-below::after { bottom: auto; top: -8px; }
+.st-tag.is-off { opacity: 0; }   /* no free room by the edge: the booking bar carries the totals */
+.st-tag-n { font: 800 40px/72px var(--font); letter-spacing: -.02em; }
+.st-tag-v { font: 700 40px/72px var(--font); letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: #2f4fbf; }
+
+/* ── the booking bar ── */
+.st-sum { position: absolute; left: 64px; right: 64px; top: 710px; height: 106px; padding: 0 20px 0 30px; border-radius: 26px; background: var(--bar);
+  box-shadow: 0 0 0 1px var(--line) inset; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.st-blk { display: flex; flex-direction: column; gap: 4px; }
+.st-key { display: flex; align-items: center; gap: 10px; font: 600 22px var(--font); color: var(--text-2); white-space: nowrap; }
+.st-dot, .st-ring { width: 16px; height: 16px; border-radius: 50%; }
+.st-dot { background: var(--harbor); }
+.st-ring { box-shadow: 0 0 0 3px var(--harbor) inset; }
+.st-val { font: 700 42px/1.1 var(--font); letter-spacing: -.02em; white-space: nowrap; }
+.st-nrow { display: flex; align-items: center; gap: 16px; }
+.st-n { font: 700 44px/1.1 var(--display); letter-spacing: -.02em; display: flex; align-items: baseline; gap: 10px; white-space: nowrap; }
+.st-moons { display: flex; gap: 6px; height: 34px; }
+.st-chip { width: 34px; height: 34px; border-radius: 10px; background: var(--night); color: var(--moon); display: grid; place-items: center;
+  transition: transform .45s cubic-bezier(.16, 1, .3, 1), opacity .25s, background-color .3s; }
+.st-chip svg { width: 20px; height: 20px; fill: currentColor; }
+.st-chip.is-added { background: var(--night-add); color: #fff; box-shadow: 0 0 0 2px rgba(233, 238, 255, .55) inset; }
+.st-chip.is-gone { opacity: 0; transform: translateY(12px) scale(.6); }
+.st-chip.is-more { width: auto; padding: 0 8px; font: 700 20px var(--font); color: var(--text-2); background: var(--taken); }
+.st-total-v { font: 700 64px/1 var(--display); letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.st-cta { height: 72px; padding: 0 26px; border-radius: 20px; text-align: center; white-space: nowrap; font: 700 26px var(--font); background: var(--harbor); color: #fff; transition: background-color .25s, color .25s, transform .15s; }
+.st-cta:disabled { background: var(--taken); color: var(--text-3); cursor: default; }
+.st-cta:not(:disabled):active { transform: scale(.97); }
+
+/* a value that changes flips over: the old one leaves upward, the new one comes from below */
+.flip { display: inline-grid; overflow: hidden; vertical-align: bottom; }
+.flip > span { grid-area: 1 / 1; transition: transform .38s cubic-bezier(.23, 1, .32, 1), opacity .25s; }
+.flip > span.is-in { transform: translateY(70%); opacity: 0; }
+.flip > span.is-out { transform: translateY(-70%); opacity: 0; }
+.st-out.flip > span, .st-in.flip > span { justify-self: start; }
+.st-tag .flip > span { transition: transform .22s cubic-bezier(.23, 1, .32, 1) .14s, opacity .14s .14s; }   /* the old text leaves first, then the new one comes in */
+.st-tag .flip > span.is-in { transform: translateY(100%); }
+.st-tag .flip > span.is-out { transform: translateY(-100%); transition: transform .14s ease-in, opacity .12s; }
+
+.st.is-reset, .st.is-reset * { transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .st *, .st *::before { transition-duration: 1ms !important; transition-delay: 0s !important; }
+}

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Extend Stay — veraetogrex_portfolio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Extend Stay — github.com/veraetogrex-portfolio · zero dependencies
+       Drag the right edge of the stay (or focus it and use ← →) to add or remove nights;
+       booked nights stop it, the booking bar recounts nights and the total. -->
+  <section class="st" id="stay" aria-label="Extend your stay">
+    <header class="st-top">
+      <h2 class="st-month">November 2026</h2>
+      <p class="st-brand"><b>VECTOR</b><span>Stays</span><span class="st-place">Garden room at Alder House, Porto</span></p>
+    </header>
+
+    <div class="st-cal">
+      <div class="st-wd" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+      <!-- the stay is a band of nights over the days; its right edge is the check-out handle -->
+      <div class="st-grid"></div>
+    </div>
+
+    <!-- the booking bar counts the same nights as the band -->
+    <aside class="st-sum" aria-live="polite">
+      <div class="st-blk"><p class="st-key"><i class="st-dot" aria-hidden="true"></i>Check-in</p><p class="st-val st-in"></p></div>
+      <div class="st-blk"><p class="st-key"><i class="st-ring" aria-hidden="true"></i>Checkout</p><p class="st-val st-out"></p></div>
+      <div class="st-blk st-nights">
+        <p class="st-key">$120 per night, taxes incl.</p>
+        <div class="st-nrow"><p class="st-n"><span class="st-count"></span> <span class="st-word">nights</span></p><div class="st-moons" aria-hidden="true"></div></div>
+      </div>
+      <div class="st-blk st-total"><p class="st-key">Total</p><p class="st-total-v">$360</p></div>
+      <button class="st-cta" disabled>No changes</button>
+    </aside>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>

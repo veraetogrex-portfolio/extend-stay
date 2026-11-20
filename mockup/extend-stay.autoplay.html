@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T33 Extend Stay — drag the last night of the stay one day further</title>
+<link rel="stylesheet" href="_shared/nocturne.css">
+<link rel="stylesheet" href="../style.css">
+<style>
+  /* the component from ../, dressed in Nocturne type; no grid on the app screen (DESIGN.md R-07: grid only in the reel header) */
+  #stage{background:var(--page);--font:var(--f-text);--display:var(--f-text)}
+  #stage .st{position:absolute;left:40px;top:30px;zoom:1;z-index:1}
+  body.autoplay #stage :focus-visible{outline:none}
+  body.autoplay #li-cursor{transition:none}   /* visible from frame one, no fade at the loop seam */
+  /* the demo cursor large enough to read in the reel; a held grab turns moon-blue */
+  #stage #li-cursor,#stage #li-cursor svg{width:128px;height:128px}
+  #stage #li-cursor svg{margin:-10.7px 0 0 -14.3px;transform-origin:18px 14px}
+  #stage #li-cursor.grab.down .hand path{fill:#A9C1FF;stroke:#0B0C12}
+</style>
+</head>
+<body>
+<div id="stage" data-title="T33 Extend Stay" data-url="veraetogrex-portfolio.github.io/extend-stay">
+  <section class="st" id="stay" aria-label="Extend your stay">
+    <header class="st-top">
+      <h2 class="st-month">November 2026</h2>
+      <p class="st-brand"><b>VECTOR</b><span>Stays</span><span class="st-place">Garden room at Alder House, Porto</span></p>
+    </header>
+
+    <div class="st-cal">
+      <div class="st-wd" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+      <!-- the stay is a band of nights over the days; its right edge is the check-out handle -->
+      <div class="st-grid"></div>
+    </div>
+
+    <!-- the booking bar counts the same nights as the band -->
+    <aside class="st-sum" aria-live="polite">
+      <div class="st-blk"><p class="st-key"><i class="st-dot" aria-hidden="true"></i>Check-in</p><p class="st-val st-in"></p></div>
+      <div class="st-blk"><p class="st-key"><i class="st-ring" aria-hidden="true"></i>Checkout</p><p class="st-val st-out"></p></div>
+      <div class="st-blk st-nights">
+        <p class="st-key">$120 per night, taxes incl.</p>
+        <div class="st-nrow"><p class="st-n"><span class="st-count"></span> <span class="st-word">nights</span></p><div class="st-moons" aria-hidden="true"></div></div>
+      </div>
+      <div class="st-blk st-total"><p class="st-key">Total</p><p class="st-total-v">$360</p></div>
+      <button class="st-cta" disabled>No changes</button>
+    </aside>
+  </section>
+</div>
+<script>window.AUTOPLAY = true;</script>
+<script src="_shared/stage.js"></script>
+<script src="../script.js"></script>
+<script>
+const st = document.querySelector('#stay').stay;
+const edge = d => { const r = Stage.rect(st.day(d)); return [r.x, r.y + r.h / 2 - 10]; };   // the left edge of a day = check-out on that day
+const below = d => { const r = Stage.rect(st.day(d)); return [r.x + 60, r.y + r.h + 24]; };  // under the week, clear of the dates and the Checkout label
+const sine = t => .5 - .5 * Math.cos(Math.PI * t);                                 // an even pull, no snap in the middle
+Stage.init({
+  reset: () => st.reset(),
+  get cursorStart() { return below(26); },           // resting under the stay in frame one
+  async demo(s) {
+    const t0 = performance.now();
+    await s.move(edge(26), 200);                      // up onto the band's right edge
+    s.cursor.grab(true); await s.down();               // ≈0.2 s: grab it (the grip widens and gets a ring)
+    const [x, y] = edge(27);
+    await s.move([x + 6, y], 1150, { arc: 0, ease: sine });   // pull it over Thursday: the night lifts in, its moon comes up (≈0.8 s)
+    await s.up(); s.cursor.grab(false);                // let go: the edge settles on Friday's checkout
+    await s.move(below(27), 320);                      // step out of the way, under the new checkout
+    await s.until(t0, 2900);                           // 4 nights, $480
+    await s.move(edge(27), 260);
+    s.cursor.grab(true); await s.down();
+    await s.move(edge(26), 950, { arc: 0, ease: sine });      // and back: the stay can be shortened the same way
+    await s.up(); s.cursor.grab(false);
+    await s.move(this.cursorStart, 360);               // rest where frame one starts
+    await s.until(t0, 4500);
+  },
+});
+</script>
+</body>
+</html>
